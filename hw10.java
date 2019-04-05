@@ -3,14 +3,14 @@ import java.util.Scanner;
 
 class PizzaPartyDriver {
     public static void main( String args[] ) {
-        String passwd; 
-        String username = "root";
-        String db = "PizzaParty";
-        Scanner in = new Scanner(System.in);
+        // String passwd; 
+        // String username = "root";
+        // String db = "PizzaParty";
+        // //Scanner in = new Scanner(System.in);
     
-        System.out.println("Password: "); 
-        passwd = in.nextLine(); 
-        OurPizzaParty opp = new OurPizzaParty(db, username, passwd);
+        //System.out.println("Password: "); 
+       // passwd = in.nextLine(); 
+        OurPizzaParty opp = new OurPizzaParty();
         opp.menu();
     }
 }
@@ -22,13 +22,22 @@ class OurPizzaParty {
     ResultSet rs; 
     Connection connection; 
     Statement statement; 
-    String JDBC_DRIVER = "org.mysql.jdbc.Driver";
     String LOCAL_HOST = "jdbc:mariadb://localhost:3306/";
     
     public OurPizzaParty() {
-        database = "PizzaParty";
+        database = "pizzaparty";
         username = "root";
         password = "root";
+    
+        try{
+            connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
+            statement = connection.createStatement();
+            System.out.println("Connected");
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
     }
     
     public OurPizzaParty( String database, String username, String password ) {
@@ -36,21 +45,20 @@ class OurPizzaParty {
         this.username = username;
         this.password = password;
     
-    try{
-        connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
-        statement = connection.createStatement();
-    }
-    catch(SQLException e)
-    {
-        e.printStackTrace();
-    }
+        try{
+            connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
+            statement = connection.createStatement();
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
     
     }
 
     /*
         The method menu will be the entry point into the functionality you provide
     */
-
     public void menu() {
         String selection;
         Scanner in = new Scanner(System.in);
@@ -58,12 +66,16 @@ class OurPizzaParty {
             System.out.println("(1) Execute a complete SQL command\n(2) Build an Order\n(3) Logout / End Program");
             selection = in.nextLine();
 
-            if(selection.equals("1")){
+            if(selection.equals("3") || selection.equals("q"))
+                System.exit(0); //0 indicates successful termination, 1 or -1 is unsuccessful termination. 
+
+            else if(selection.equals("1")){
+                System.out.println("Query: ");
                 selection = in.nextLine();
+
                 executeQuery(selection); 
-            }
-            else if(selection.equals("3")){
-                System.exit(0); //0 indicates successful termination, 1 or -1 is unsuccessful termination.  
+            
+             
             }
         } 
 
@@ -71,11 +83,27 @@ class OurPizzaParty {
     }
 
     public void executeQuery(String query){
-        // rs = statement.executeQuery(query);
-        // while(rs.next()){
+        try{
+            //statement.createStatement();
+            rs = statement.executeQuery(query);
+            int numColumns = rs.getMetaData().getColumnCount();
 
-        // }
-
+            while(rs.next()){
+                // String record = rs.getString("Flavor_Name");
+                // System.out.println(record);    
+                
+                for(int i = 1; i < numColumns; i++)
+                {
+                    String column = rs.getString(i);
+                    System.out.print(column + ", ");
+                }
+            }
+        }
+        catch(SQLException sqle)
+        {
+            sqle.printStackTrace();
+        }
+        System.out.println();
         return; 
     }
 

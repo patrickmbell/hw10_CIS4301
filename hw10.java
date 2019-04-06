@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 class PizzaPartyDriver {
     public static void main( String args[] ) {
@@ -15,13 +16,27 @@ class PizzaPartyDriver {
     }
 }
 
+class specialtyPizza(){
+    String pizzaId, flavorName, sauceName, crustStyle;
+
+    public specialtyPizza(String pizzaId, String flavorName, String sauceName, String crustStyle)
+    {
+        this.pizzaId = pizzaId;
+        this.flavorName = flavorName;
+        this.sauceName = sauceName;
+        this.crustStyle = crustStyle;
+    }
+}
+
 class OurPizzaParty {
     private String database;
     private String username;
     private String password;
-    ResultSet rs; 
-    Connection connection; 
-    Statement statement; 
+    private ResultSet rs; 
+    private Connection connection; 
+    private Statement statement;
+    private String[] restaurants;  
+
     String LOCAL_HOST = "jdbc:mariadb://localhost:3306/";
     
     public OurPizzaParty() {
@@ -38,6 +53,8 @@ class OurPizzaParty {
         {
             e.printStackTrace();
         }
+
+
     }
     
     public OurPizzaParty( String database, String username, String password ) {
@@ -48,12 +65,37 @@ class OurPizzaParty {
         try{
             connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
             statement = connection.createStatement();
+            System.out.println("Connected");
         }
         catch(SQLException e)
         {
             e.printStackTrace();
         }
     
+    }
+
+    public void getRestaurants(){
+        try {
+            String query = "SELECT Restaurant_Name FROM restaurant";    
+            int count = 0;
+            rs = statement.executeQuery(query);
+            while(rs.next()){
+                count++;
+            }
+            //System.out.println("numRows "+count);
+            restaurants = new String[count];
+            count = 0;
+            rs = statement.executeQuery(query);
+            while(rs.next()){
+                restaurants[count] = rs.getString("Restaurant_Name");
+                count++;
+            }
+            
+        } 
+        catch (SQLException sqle) {
+            sqle.printStackTrace();
+        }
+
     }
 
     /*
@@ -69,34 +111,37 @@ class OurPizzaParty {
             if(selection.equals("3") || selection.equals("q"))
                 System.exit(0); //0 indicates successful termination, 1 or -1 is unsuccessful termination. 
 
+            else if(selection.equals("2")){
+                buildOrder();
+            }
+
             else if(selection.equals("1")){
                 System.out.println("Query: ");
                 selection = in.nextLine();
 
                 executeQuery(selection); 
-            
-             
             }
         } 
 
-    // implement your menu
     }
 
     public void executeQuery(String query){
         try{
-            //statement.createStatement();
+
             rs = statement.executeQuery(query);
             int numColumns = rs.getMetaData().getColumnCount();
-
-            while(rs.next()){
-                // String record = rs.getString("Flavor_Name");
-                // System.out.println(record);    
+            
+            while(rs.next()){   
                 
                 for(int i = 1; i < numColumns; i++)
                 {
                     String column = rs.getString(i);
-                    System.out.print(column + ", ");
+                    if(i != numColumns - 1)
+                        System.out.print(column + ", ");
+                    else
+                        System.out.print(column);
                 }
+                System.out.println();
             }
         }
         catch(SQLException sqle)
@@ -106,7 +151,29 @@ class OurPizzaParty {
         System.out.println();
         return; 
     }
+    public void buildOrder(){
+        getRestaurants();
+        Scanner in = new Scanner(System.in);
+        String name, restaurant, specialtyPizza;
+        ArrayList<String> pizzas = new ArrayList<String>();
 
-    // implement other methods as needed
+        System.out.println("Your Name: ");
+        name = in.nextLine();
+        
+        for(int i = 0; i < restaurants.length; i++){
+            System.out.println((i+1) + ". " + restaurants[i]);
+        }
+        System.out.println("Select Restaurant: ");
+        restaurant = in.nextLine();
+
+        try{
+            rs = statement.executeQuery("select Flavor_Name from pizza NATURAL JOIN restaurant WHERE Restaurant_Name = " + restaurant);
+            while(rs.next()){
+                
+            }
+        }
+        catch(SQLException sqle){
+            sqle.printStackTrace();
+        }
+    }
 }
-    // implement other classes as needed

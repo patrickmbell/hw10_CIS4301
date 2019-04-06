@@ -16,7 +16,7 @@ class PizzaPartyDriver {
     }
 }
 
-class specialtyPizza(){
+class specialtyPizza {
     String pizzaId, flavorName, sauceName, crustStyle;
 
     public specialtyPizza(String pizzaId, String flavorName, String sauceName, String crustStyle)
@@ -154,8 +154,9 @@ class OurPizzaParty {
     public void buildOrder(){
         getRestaurants();
         Scanner in = new Scanner(System.in);
-        String name, restaurant, specialtyPizza;
-        ArrayList<String> pizzas = new ArrayList<String>();
+        String name, restaurant, pizza;
+        int index; 
+        ArrayList<specialtyPizza> pizzas = new ArrayList<specialtyPizza>();
 
         System.out.println("Your Name: ");
         name = in.nextLine();
@@ -164,13 +165,19 @@ class OurPizzaParty {
             System.out.println((i+1) + ". " + restaurants[i]);
         }
         System.out.println("Select Restaurant: ");
-        restaurant = in.nextLine();
-
+        index = in.nextInt();
+        restaurant = restaurants[index-1];
         try{
-            rs = statement.executeQuery("select Flavor_Name from pizza NATURAL JOIN restaurant WHERE Restaurant_Name = " + restaurant);
+            rs = statement.executeQuery("select Flavor_Name, Crust_Style, Sauce_Name, pizza_id from pizza NATURAL JOIN restaurant WHERE Restaurant_Name ='" + restaurant +"'");
+            int count = 1;
+            System.out.println("\nFlavor Name --- Crust Style --- Sauce Name");
             while(rs.next()){
-                
+                specialtyPizza p = new specialtyPizza(rs.getString("pizza_id"), rs.getString("Flavor_Name"), rs.getString("Sauce_Name"), rs.getString("Crust_Style"));
+                pizzas.add(p);
+                System.out.println(count + ". " + p.flavorName + " --- " + p.crustStyle + " --- " + p.sauceName);
+                count++;
             }
+            System.out.println();
         }
         catch(SQLException sqle){
             sqle.printStackTrace();

@@ -3,6 +3,7 @@
 if [ "$1" == "clean" ]; then
 	rm PizzaPartyDriver.class
 	rm OurPizzaParty.class
+	rm specialtyPizza.class
 	exit 0 
 fi
 

@@ -2,6 +2,13 @@ import java.sql.*;
 import java.util.Scanner;
 import java.util.ArrayList;
 
+/*
+Price of a pizza is the sum of prices of the flavor and the crust.
+Contains entries for individual pizzas of an order.
+If an order contains multiple pizzas of same type, each will have different entry in pizza table with 
+a different Pizza_ID(other attributes will remain same.)
+*/
+
 class PizzaPartyDriver {
     public static void main( String args[] ) {
         // String passwd; 
@@ -28,6 +35,24 @@ class specialtyPizza {
     }
 }
 
+class Pizza {
+    String pizzaId, flavorName, sauceName, crustStyle;
+    ArrayList<String> toppings = new ArrayList<String>();
+
+    int price;
+
+    public Pizza(String pizzaId, String flavorName, String sauceName, String crustStyle)
+    {
+        this.pizzaId = pizzaId;
+        this.flavorName = flavorName;
+        this.sauceName = sauceName;
+        this.crustStyle = crustStyle;
+    }
+    public Pizza(){
+
+    }
+}
+
 class OurPizzaParty {
     private String database;
     private String username;
@@ -47,7 +72,7 @@ class OurPizzaParty {
         try{
             connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
             statement = connection.createStatement();
-            System.out.println("Connected");
+            System.out.println("Connected to pizzaparty!");
         }
         catch(SQLException e)
         {
@@ -65,7 +90,7 @@ class OurPizzaParty {
         try{
             connection = DriverManager.getConnection(LOCAL_HOST + this.database, this.username, this.password);
             statement = connection.createStatement();
-            System.out.println("Connected");
+            System.out.println("Connected to pizzaparty!");
         }
         catch(SQLException e)
         {
@@ -83,6 +108,7 @@ class OurPizzaParty {
                 count++;
             }
             //System.out.println("numRows "+count);
+            System.out.println("THE COUNT FOR THE RESTAURANTS IS: "  + count); 
             restaurants = new String[count];
             count = 0;
             rs = statement.executeQuery(query);
@@ -105,7 +131,9 @@ class OurPizzaParty {
         String selection;
         Scanner in = new Scanner(System.in);
         while(true){
-            System.out.println("(1) Execute a complete SQL command\n(2) Build an Order\n(3) Logout / End Program");
+            System.out.println("\n***** Main Menu *****");
+            System.out.println("[1] Execute a complete SQL command\n[2] Build an Order\n[3] Logout / End Program");
+            System.out.print("Enter Choice: ");
             selection = in.nextLine();
 
             if(selection.equals("3") || selection.equals("q"))
@@ -116,7 +144,7 @@ class OurPizzaParty {
             }
 
             else if(selection.equals("1")){
-                System.out.println("Query: ");
+                System.out.print("Query: ");
                 selection = in.nextLine();
 
                 executeQuery(selection); 
@@ -155,29 +183,97 @@ class OurPizzaParty {
         getRestaurants();
         Scanner in = new Scanner(System.in);
         String name, restaurant, pizza;
-        int index; 
-        ArrayList<specialtyPizza> pizzas = new ArrayList<specialtyPizza>();
-
-        System.out.println("Your Name: ");
-        name = in.nextLine();
-        
-        for(int i = 0; i < restaurants.length; i++){
-            System.out.println((i+1) + ". " + restaurants[i]);
-        }
-        System.out.println("Select Restaurant: ");
-        index = in.nextInt();
-        restaurant = restaurants[index-1];
+        int index;
+        Boolean isDelivery;
+        Boolean orderComplete = false; 
+        Boolean foundCustomer = false;  
+        String choice; 
+        ArrayList<Pizza> pizzas = new ArrayList<Pizza>();
+        ArrayList<String> pizzaNames = new ArrayList<String>();
         try{
-            rs = statement.executeQuery("select Flavor_Name, Crust_Style, Sauce_Name, pizza_id from pizza NATURAL JOIN restaurant WHERE Restaurant_Name ='" + restaurant +"'");
-            int count = 1;
-            System.out.println("\nFlavor Name --- Crust Style --- Sauce Name");
-            while(rs.next()){
-                specialtyPizza p = new specialtyPizza(rs.getString("pizza_id"), rs.getString("Flavor_Name"), rs.getString("Sauce_Name"), rs.getString("Crust_Style"));
-                pizzas.add(p);
-                System.out.println(count + ". " + p.flavorName + " --- " + p.crustStyle + " --- " + p.sauceName);
-                count++;
+        
+        while(!foundCustomer){
+            System.out.print("Enter Customer Name: ");
+            name = in.nextLine();
+            char c1 = name.toUpperCase().charAt(0);
+            
+            rs = statement.executeQuery("SELECT DISTINCT * FROM customer WHERE Customer_Name LIKE \""+'%'+name+'%'+'\"');
+            
+            if(!rs.next()) //empty result set
+            {
+                System.out.println("Customer does not exist!");
             }
-            System.out.println();
+            else
+            {
+                System.out.print("\n\t* Address: " + rs.getString("Address"));
+                System.out.print("\n\t* Phone: " + rs.getString("Phone_Number"));
+                System.out.print("\nIs this you? (Yes/No): ");
+                choice = in.next();
+
+                if(choice.equals("Yes") || choice.equals("y") || choice.equals("yes")){
+                    foundCustomer = true;
+                    continue; 
+                }
+                else
+                    continue; 
+            }
+        }
+        System.out.println("\n***** Restaurant Menu *****");
+
+        for(int i = 0; i < restaurants.length; i++){
+            System.out.println(i);
+            System.out.println('['+(i+1) + ']' + ". " + restaurants[i]);
+        }
+        
+        System.out.print("\nEnter Choice: ");
+        index = in.nextInt();
+        System.out.print("\nIs this order a delivery? (Yes/No): ");
+
+        choice = in.next();
+
+        if(choice.equals("Yes") || choice.equals("yes") || choice.equals("y"))
+            isDelivery = true; 
+        else
+            isDelivery = false; 
+
+        restaurant = restaurants[index-1];  //chooses the restaurant from the array of restaurant names.  
+
+        while(!orderComplete){
+            System.out.println("\n***** " + restaurant + "Options *****");
+            System.out.println("[1]  Add Pizza \n[2]  Finalize Order");
+            System.out.print("\nEnter choice: ");
+            choice = in.next();
+
+            System.out.println("***** " + restaurant + "Menu *****");
+            
+            rs = statement.executeQuery("select * from flavor WHERE Restaurant_Name ='" + restaurant +"'");
+            int count = 1;
+            
+            while(rs.next()){
+                Pizza p = new Pizza();
+                p.flavorName = rs.getString("Flavor_Name");
+                p.price = rs.getInt("Price");
+                System.out.println('[' + count + "] " + p.price + " " + p.flavorName);
+
+                ResultSet temp;
+                temp = statement.executeQuery("SELECT Topping_Name FROM flavor_toppings WHERE Restaurant_Name='" 
+                + restaurant + "'" +  " AND Flavor_Name='" + p.flavorName + "'");
+                
+                System.out.println();
+                while(temp.next()){
+                    String query = temp.getString("Topping_Name");
+                    System.out.print(query);
+                    p.toppings.add(query);
+                    
+                    if(!temp.last())
+                        System.out.print(", ");
+                    
+                }
+                System.out.println();
+            }
+
+            
+            }
         }
         catch(SQLException sqle){
             sqle.printStackTrace();

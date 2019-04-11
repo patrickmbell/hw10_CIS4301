@@ -221,8 +221,7 @@ class OurPizzaParty {
         System.out.println("\n***** Restaurant Menu *****");
 
         for(int i = 0; i < restaurants.length; i++){
-            System.out.println(i);
-            System.out.println('['+(i+1) + ']' + ". " + restaurants[i]);
+            System.out.println("[" + (i+1) + "]" + " " + restaurants[i]);
         }
         
         System.out.print("\nEnter Choice: ");

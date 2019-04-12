@@ -262,7 +262,7 @@ class OurPizzaParty {
                 temp = statement.executeQuery("SELECT Topping_Name FROM flavor_toppings WHERE Restaurant_Name='" 
                 + restaurant + "'" +  " AND Flavor_Name='" + p.flavorName + "'");
                 
-                System.out.println();[INFO] Parameter: artifactId, Value: my-project
+                System.out.println();
                 while(temp.next()){
                     String query = temp.getString("Topping_Name");
                     System.out.print(query + " DEBUG");

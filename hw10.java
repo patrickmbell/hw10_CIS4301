@@ -39,7 +39,7 @@ class Pizza {
     String pizzaId, flavorName, sauceName, crustStyle;
     ArrayList<String> toppings = new ArrayList<String>();
 
-    int price;
+    float price;
 
     public Pizza(String pizzaId, String flavorName, String sauceName, String crustStyle)
     {
@@ -78,7 +78,7 @@ class OurPizzaParty {
         {
             e.printStackTrace();
         }
-
+    
 
     }
     
@@ -108,7 +108,7 @@ class OurPizzaParty {
                 count++;
             }
             //System.out.println("numRows "+count);
-            System.out.println("THE COUNT FOR THE RESTAURANTS IS: "  + count); 
+            System.out.println("**DEBUG** THE COUNT FOR THE RESTAURANTS IS: "  + count); 
             restaurants = new String[count];
             count = 0;
             rs = statement.executeQuery(query);
@@ -136,9 +136,10 @@ class OurPizzaParty {
             System.out.print("Enter Choice: ");
             selection = in.nextLine();
 
-            if(selection.equals("3") || selection.equals("q"))
+            if(selection.equals("3") || selection.equals("q")) {
                 System.exit(0); //0 indicates successful termination, 1 or -1 is unsuccessful termination. 
-
+                in.close();
+            }
             else if(selection.equals("2")){
                 buildOrder();
             }
@@ -149,8 +150,10 @@ class OurPizzaParty {
 
                 executeQuery(selection); 
             }
-        } 
-
+            else
+                System.out.println("Invalid Input!");
+        }
+        
     }
 
     public void executeQuery(String query){
@@ -229,7 +232,7 @@ class OurPizzaParty {
         System.out.print("\nIs this order a delivery? (Yes/No): ");
 
         choice = in.next();
-
+        
         if(choice.equals("Yes") || choice.equals("yes") || choice.equals("y"))
             isDelivery = true; 
         else
@@ -251,22 +254,25 @@ class OurPizzaParty {
             while(rs.next()){
                 Pizza p = new Pizza();
                 p.flavorName = rs.getString("Flavor_Name");
-                p.price = rs.getInt("Price");
-                System.out.println('[' + count + "] " + p.price + " " + p.flavorName);
+                p.price = rs.getFloat("Price");
+                System.out.println("[" + count + "] " + p.price + " " + p.flavorName);
 
                 ResultSet temp;
+                System.out.println("**DEBUG*** " + p.flavorName);
                 temp = statement.executeQuery("SELECT Topping_Name FROM flavor_toppings WHERE Restaurant_Name='" 
                 + restaurant + "'" +  " AND Flavor_Name='" + p.flavorName + "'");
                 
-                System.out.println();
+                System.out.println();[INFO] Parameter: artifactId, Value: my-project
                 while(temp.next()){
                     String query = temp.getString("Topping_Name");
-                    System.out.print(query);
+                    System.out.print(query + " DEBUG");
                     p.toppings.add(query);
                     
                     if(!temp.last())
+                    {
                         System.out.print(", ");
-                    
+                    }
+
                 }
                 System.out.println();
             }

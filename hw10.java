@@ -18,25 +18,13 @@ class PizzaPartyDriver {
     }
 }
 
-class specialtyPizza {
-    String pizzaId, flavorName, sauceName, crustStyle;
-
-    public specialtyPizza(String pizzaId, String flavorName, String sauceName, String crustStyle)
-    {
-        this.pizzaId = pizzaId;
-        this.flavorName = flavorName;
-        this.sauceName = sauceName;
-        this.crustStyle = crustStyle;
-    }
-}
-
 class Pizza {
     String flavorName, sauceName, crustStyle;
     ArrayList<String> toppings = new ArrayList<String>();
     int crustSize; 
-    float price;
+    double price;
 
-    public Pizza(String flavorName, String sauceName, String crustStyle, float price, int crustSize)
+    public Pizza(String flavorName, String sauceName, String crustStyle, double price, int crustSize)
     {
         this.flavorName = flavorName;
         this.sauceName = sauceName;
@@ -155,12 +143,13 @@ class OurPizzaParty {
             rs = statement.executeQuery(query);
             int numColumns = rs.getMetaData().getColumnCount();
             
+
             while(rs.next()){   
                 
-                for(int i = 1; i < numColumns; i++)
+                for(int i = 1; i <= numColumns; i++)
                 {
                     String column = rs.getString(i);
-                    if(i != numColumns - 1)
+                    if(i != numColumns )
                         System.out.print(column + ", ");
                     else
                         System.out.print(column);
@@ -170,7 +159,7 @@ class OurPizzaParty {
         }
         catch(SQLException sqle)
         {
-            sqle.printStackTrace();
+            System.out.println("Bad Query!");
         }
 
         return; 
@@ -191,7 +180,7 @@ class OurPizzaParty {
 
         String choice, crustChoice, sauceChoice, flavorChoice;
         int pizzaIndex, crustSize;
-        int pizzaPrice = 0;
+        double pizzaPrice = 0;
 
         ArrayList<Pizza> orderPizzas = new ArrayList<Pizza>();
         ArrayList<String> pizzaOptions = new ArrayList<String>();
@@ -204,8 +193,8 @@ class OurPizzaParty {
 
             while (!foundCustomer) {
                 System.out.print("Enter Customer Name: ");
-                name = in.nextLine();
-                char c1 = name.toUpperCase().charAt(0);
+                
+                name = in.next();
 
                 rs = statement.executeQuery("SELECT DISTINCT * FROM customer WHERE Customer_Name LIKE \"" + '%' + name + '%' + '\"');
 
@@ -221,8 +210,14 @@ class OurPizzaParty {
                     if (choice.equals("Yes") || choice.equals("y") || choice.equals("yes")) {
                         foundCustomer = true;
                         continue;
-                    } else
+                    } 
+                    else if(choice.equals("No") || choice.equals("no") || choice.equals("n"))
+                    {
                         continue;
+                    }
+                    else 
+                        continue;
+                        
                 }
             }
             System.out.println("\n***** Restaurant Menu *****");
@@ -267,6 +262,7 @@ class OurPizzaParty {
                     if(rs.next())
                         maxPizzaID = rs.getInt("max");
 
+
                     System.out.println("***** Order #" + maxOrderID + " *****");
                     System.out.println("***** Customer *****");
                     rs = statement.executeQuery("SELECT DISTINCT * FROM customer WHERE Customer_Name LIKE \"" + '%' + name + '%' + '\"');
@@ -289,7 +285,7 @@ class OurPizzaParty {
                     //A successful order will add new entries in Pizza, Order, and Order_Pizza tables.
                     for(int i = 0; i < orderPizzas.size(); i++){ 
                         statement.executeUpdate("INSERT INTO pizza VALUES (" + (maxPizzaID+1) + ", '" + orderPizzas.get(i).flavorName + "', '" + orderPizzas.get(i).crustStyle + "', '" + orderPizzas.get(i).crustSize + "', '" + restaurant + "', '" + orderPizzas.get(i).sauceName + "')");
-                        pizzaIDs.add(maxPizzaID);
+                        pizzaIDs.add(maxPizzaID+1);
                         maxPizzaID++; 
                     }
 
@@ -312,7 +308,7 @@ class OurPizzaParty {
                                 carNumber = rs.getString("Car_Number");
                             }
                         }
-
+                        
                         statement.executeUpdate("INSERT INTO orders VALUES (" + (maxOrderID + 1) + ", '" + name + "', '" + restaurant + "', 'YES', '" + carNumber + "')"); 
                                                 
                     }
@@ -331,16 +327,17 @@ class OurPizzaParty {
                         System.out.println("Scheduled for Pickup");
                     }
                     else{
+                        System.out.println("Delivered By: " + driverName);
 
                     }
                     System.out.println("Pizzas\t\tPizza Description");
                     int count = 1;
                     
-                    float orderTotal = 0; 
+                    double orderTotal = 0; 
                     for(int i = 0; i < orderPizzas.size(); i++){
 
                         System.out.println("\t#" + count + "\t" + "$" + orderPizzas.get(i).price + "\t\t" + orderPizzas.get(i).crustSize + '"' + " " 
-                        + orderPizzas.get(i).crustStyle + orderPizzas.get(i).flavorName + " with " + orderPizzas.get(i).sauceName);
+                        + orderPizzas.get(i).crustStyle + " " + orderPizzas.get(i).flavorName + " with " + orderPizzas.get(i).sauceName);
                         
                         //if(rs.next())
                         orderTotal += orderPizzas.get(i).price;
@@ -359,7 +356,7 @@ class OurPizzaParty {
                 while (rs.next()) {
                     Pizza p = new Pizza();
                     p.flavorName = rs.getString("Flavor_Name");
-                    p.price = rs.getFloat("Price");
+                    p.price = rs.getDouble("Price");
                     System.out.println("[" + count + "] " + p.price + " " + p.flavorName);
 
                     statement = connection.createStatement();
@@ -412,12 +409,11 @@ class OurPizzaParty {
                 index = in.nextInt();
                 sauceChoice = sauces.get(index-1);
                 
-                System.out.println(flavorChoice + " " + sauceChoice + " " + crustChoice + " " + crustSize); 
-
+                
                 rs = statement.executeQuery("select SUM(flavor.Price + crusts.Price) as Total_Price from flavor join crusts on ( flavor.Restaurant_Name = crusts.Restaurant_Name AND flavor.Restaurant_Name ='" +  restaurant  + "' AND Flavor_Name = '" + flavorChoice + "'  AND Crust_Style = '" + crustChoice + "' AND Size=" + crustSize + ")"); 
                 
                 if(rs.next())
-                    pizzaPrice = rs.getInt("Total_Price");
+                    pizzaPrice = rs.getDouble("Total_Price");
                 
                 Pizza p = new Pizza(flavorChoice, sauceChoice, crustChoice, pizzaPrice, crustSize);
 
